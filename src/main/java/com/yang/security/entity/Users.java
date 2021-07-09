@@ -36,7 +36,8 @@ public class Users {
     /**
      * 锁
      */
-    private Boolean lock;
+    @TableField("ISLOCK")
+    private Boolean isLock;
     /**
      * MAIL
      */

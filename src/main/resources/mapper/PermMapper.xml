@@ -23,7 +23,7 @@
             LEFT JOIN role_perm rp ON p.ID = rp.PID
             LEFT JOIN role r ON r.ID = rp.RID
             LEFT JOIN user_role ur ON ur.RID = r.ID
-            LEFT JOIN USER u ON u.ID = ur.UID
+            LEFT JOIN USERS u ON u.ID = ur.UID
         WHERE
             u.PHONE = #{phone}
         UNION
@@ -33,7 +33,7 @@
         FROM
             perm p
             LEFT JOIN user_perm up ON p.ID = up.PID
-            LEFT JOIN USER u ON u.ID = up.UID
+            LEFT JOIN USERS u ON u.ID = up.UID
         WHERE
             u.PHONE = #{phone}
     </select>

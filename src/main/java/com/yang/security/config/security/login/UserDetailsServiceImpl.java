@@ -1,4 +1,4 @@
-package com.yang.security.service.impl;
+package com.yang.security.config.security.login;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.yang.security.dao.PermMapper;
@@ -39,6 +39,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
      * spring-security与shiro的权限方案不同
      * GrantedAuthority将角色与权限放在在一起，区分角色需要加前缀'ROLE_'
      * 数据库用户密码默认存加密后的
+     *
      * @param username
      * @return
      * @throws UsernameNotFoundException
@@ -54,7 +55,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         if (ObjectUtils.isEmpty(users)) {
             throw new UsernameNotFoundException("username is null");
         }
-        if (users.getLock()) {
+        if (users.getIsLock() == null || users.getIsLock() == true) {
             throw new UsernameNotFoundException("username is locked");
         }
         // 权限认证

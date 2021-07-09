@@ -20,7 +20,7 @@
         FROM
             role r
             LEFT JOIN user_role ur ON ur.RID = r.ID
-            LEFT JOIN USER u ON u.ID = ur.UID
+            LEFT JOIN USERS u ON u.ID = ur.UID
         WHERE
             u.PHONE = #{phone}
     </select>

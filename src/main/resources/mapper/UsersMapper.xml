@@ -7,7 +7,7 @@
         <result property="phone" column="PHONE" jdbcType="VARCHAR"/>
         <result property="password" column="PASSWORD" jdbcType="VARCHAR"/>
         <result property="username" column="USERNAME" jdbcType="VARCHAR"/>
-        <result property="lock" column="LOCK" jdbcType="BOOLEAN"/>
+        <result property="isLock" column="ISLOCK" jdbcType="BOOLEAN"/>
         <result property="mail" column="MAIL" jdbcType="VARCHAR"/>
         <result property="gender" column="GENDER" jdbcType="BOOLEAN"/>
         <result property="revision" column="REVISION" jdbcType="INTEGER"/>
