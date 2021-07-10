@@ -23,7 +23,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -67,8 +66,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (!StringUtils.isEmpty(token) && !JwtUtils.isTokenExpired(token)) {
                 String phone = JwtUtils.getClaimFiled(token, "phone");
                 if (JwtUtils.verify(token, phone)) {
-                    UserDetails userDetails = userDetailsService.loadUserByUsername(phone);
-                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    UsernamePasswordAuthenticationToken authentication = null;
+                    if (redisTemplate.hasKey(KeyMap.REDIS_AUTH) && redisTemplate.opsForHash().hasKey(KeyMap.REDIS_AUTH,phone)){
+                        List<GrantedAuthority> grantedAuthorities = (List)redisTemplate.opsForHash().get(KeyMap.REDIS_AUTH, phone);
+                        authentication = new UsernamePasswordAuthenticationToken(phone, null, grantedAuthorities);
+                    }else {
+                        UserDetails userDetails = userDetailsService.loadUserByUsername(phone);
+                        authentication = new UsernamePasswordAuthenticationToken(phone, null, userDetails.getAuthorities());
+                    }
                     SecurityContextHolder.getContext().setAuthentication(authentication);  // 在上下文中记录UserDetails
                     if (isAlmostExpired(token)) {
                         new JwtRefreshSuccessHandler().onAuthenticationSuccess(request, response, authentication);

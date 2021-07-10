@@ -22,6 +22,5 @@ public class TokenClearLogoutHandler implements LogoutHandler {
     public void logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
         UserDetails principal = (UserDetails) authentication.getPrincipal();
         redisTemplate.opsForHash().delete(KeyMap.REDIS_AUTH, principal.getUsername());
-        System.out.println("------");
     }
 }
