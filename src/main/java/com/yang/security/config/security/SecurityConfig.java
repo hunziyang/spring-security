@@ -1,8 +1,11 @@
 package com.yang.security.config.security;
 
+import com.yang.security.config.security.jwt.JwtAuthenticationFilter;
+import com.yang.security.config.security.login.DefaultPasswordEncode;
 import com.yang.security.config.security.login.LoginFailureHandler;
 import com.yang.security.config.security.login.LoginSuccessHandler;
 import com.yang.security.config.security.login.MyUsernamePasswordAuthenticationFilter;
+import com.yang.security.config.security.logout.TokenClearLogoutHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,6 +21,8 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
+import org.springframework.security.web.authentication.logout.LogoutHandler;
 
 /**
  * spring-security基础配置类
@@ -29,14 +34,33 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private UserDetailsService userDetailsService;
+    @Autowired
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+    @Autowired
+    private LogoutHandler logoutHandler;
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.csrf().disable()
-                .authorizeRequests().anyRequest().authenticated();
-
-        http.addFilterBefore(myUsernamePasswordAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
-        http.headers().cacheControl();
+        http
+            .csrf().disable()  //CRSF禁用，因为不使用session
+            .sessionManagement().disable()  //禁用session
+            .formLogin().disable() //禁用form登录
+            .cors()  //支持跨域
+            .and()
+            .authorizeRequests()
+                .antMatchers("/user/register").permitAll() //运行任何人访问
+                .anyRequest().authenticated()//其余路径均需认证
+            .and()
+            // 将拦截器添加至Security
+            .addFilterBefore(myUsernamePasswordAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(jwtAuthenticationFilter,MyUsernamePasswordAuthenticationFilter.class)
+            .logout()
+                .logoutUrl("/logout")
+                .addLogoutHandler(logoutHandler)  //logout时清除token
+                .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler()) //logout成功后返回200
+            .and()
+            .sessionManagement().disable();
     }
+
 
     /**
      * 用@Bean注入有问题

@@ -1,4 +1,4 @@
-package com.yang.security.config.security;
+package com.yang.security.config.security.login;
 
 import cn.hutool.crypto.digest.DigestAlgorithm;
 import cn.hutool.crypto.digest.Digester;

@@ -16,13 +16,15 @@ import java.util.Map;
 
 public class JwtUtils {
     // 过期时间5分钟
-    private static final long EXPIRE_TIME = 5 * 60 * 1000;
+    public static final long EXPIRE_TIME = 5 * 60 * 1000;
 
     // 私钥
     public static String SECRET = "SECRET_YANG";
 
     // 请求头
-    public static final String AUTH_HEADER = "X-Authorization-With";
+    public static final String AUTH_HEADER = "Authorization";
+
+    public static final String TOKEN_PREFIX = "Bearer ";
 
     /**
      * 验证token是否正确
@@ -55,10 +57,12 @@ public class JwtUtils {
      */
     public static String sign(String phone) {
         try {
-            Date date = new Date(System.currentTimeMillis() + EXPIRE_TIME);
+            long time = System.currentTimeMillis();
+            Date date = new Date(time);
+            Date expireDate = new Date(time + EXPIRE_TIME);
             Algorithm algorithm = Algorithm.HMAC256(SECRET);
             // 附带username，nickname信息
-            return JWT.create().withClaim("phone", phone).withExpiresAt(date).sign(algorithm);
+            return JWT.create().withClaim("phone", phone).withIssuedAt(date).withExpiresAt(expireDate).sign(algorithm);
         } catch (JWTCreationException e) {
             return null;
         }
@@ -72,6 +76,7 @@ public class JwtUtils {
             DecodedJWT jwt = JWT.decode(token);
             return jwt.getIssuedAt();
         } catch (JWTDecodeException e) {
+            e.printStackTrace();
             return null;
         }
     }

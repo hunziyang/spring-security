@@ -9,6 +9,8 @@ import com.yang.security.entity.Role;
 import com.yang.security.entity.Users;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -23,6 +25,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.yang.security.config.redis.KeyMap.REDIS_AUTH;
+
 /**
  * 获取用户的相关信息
  */
@@ -34,6 +38,9 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     private PermMapper permMapper;
     @Autowired
     private RoleMapper roleMapper;
+    @Autowired
+    @Qualifier("defaultRedisTemplate")
+    private RedisTemplate redisTemplate;
 
     /**
      * spring-security与shiro的权限方案不同
@@ -59,17 +66,25 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             throw new UsernameNotFoundException("username is locked");
         }
         // 权限认证
-        Set<Perm> perms = permMapper.selectPermByPhone(username);
-        Set<Role> roles = roleMapper.selectRolesByPhone(username);
+        List<GrantedAuthority> grantedAuthorityList = authorization(username);
+        if (grantedAuthorityList.size() >0 ){
+            redisTemplate.opsForHash().put(REDIS_AUTH,username,grantedAuthorityList);
+        }
+        return new User(users.getPhone(), users.getPassword(), grantedAuthorityList);
+    }
+
+    private List<GrantedAuthority> authorization(String phone) {
+        List<GrantedAuthority> grantedAuthorityList = new ArrayList<>();
+        Set<Perm> perms = permMapper.selectPermByPhone(phone);
+        Set<Role> roles = roleMapper.selectRolesByPhone(phone);
         List<String> roleList = roles.stream().filter(role -> role != null).map(role -> "ROLE_" + role.getRoleKey()).collect(Collectors.toList());
         List<String> permList = perms.stream().filter(perm -> perm != null).map(Perm::getPermKey).collect(Collectors.toList());
-        List<GrantedAuthority> grantedAuthorityList = new ArrayList<>();
-        if (ObjectUtils.isEmpty(roleList)) {
+        if (!ObjectUtils.isEmpty(roleList)) {
             roleList.stream().forEach(role -> grantedAuthorityList.add(new SimpleGrantedAuthority(role)));
         }
-        if (ObjectUtils.isEmpty(permList)) {
+        if (!ObjectUtils.isEmpty(permList)) {
             permList.forEach(perm -> grantedAuthorityList.add(new SimpleGrantedAuthority(perm)));
         }
-        return new User(users.getUsername(), users.getPassword(), grantedAuthorityList);
+        return grantedAuthorityList;
     }
 }
