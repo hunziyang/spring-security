@@ -10,6 +10,7 @@ import com.yang.security.vo.users.LoginRegisterVo;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * (Users)表服务实现类
@@ -23,6 +24,7 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
     private UsersMapper usersMapper;
 
     @Override
+    @Transactional
     public boolean loginRegister(LoginRegisterVo loginRegisterVo) {
         Digester digester = new Digester(DigestAlgorithm.SHA256);
         Users users = new Users();
