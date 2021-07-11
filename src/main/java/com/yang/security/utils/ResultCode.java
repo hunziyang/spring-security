@@ -26,7 +26,7 @@ public enum ResultCode {
     USER_ACCOUNT_FORBIDDEN(20003, "账号已被禁用"),
     USER_NOT_EXIST(20004, "用户不存在"),
     USER_HAS_EXISTED(20005, "用户已存在"),
-    LOGIN_CREDENTIAL_EXISTED(20006, "凭证已存在");
+    LOGIN_CREDENTIAL_EXISTED(20006, "凭证已失效");
 
     /* 业务错误：50001-59999 */
 

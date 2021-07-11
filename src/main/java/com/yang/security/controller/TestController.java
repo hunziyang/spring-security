@@ -16,7 +16,7 @@ public class TestController {
     }
 
     @PostMapping("/test2")
-//    @PreAuthorize("hasPermission('login:select')")
+    @PreAuthorize("hasPermission('TestController','login:select')")
     public Result test2(){
         return Result.success("test");
     }
