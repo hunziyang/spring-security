@@ -10,6 +10,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.util.matcher.RequestHeaderRequestMatcher;
@@ -67,18 +68,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String phone = JwtUtils.getClaimFiled(token, "phone");
                 if (JwtUtils.verify(token, phone)) {
                     UsernamePasswordAuthenticationToken authentication = null;
-                    if (redisTemplate.hasKey(KeyMap.REDIS_AUTH) && redisTemplate.opsForHash().hasKey(KeyMap.REDIS_AUTH,phone)){
-                        List<GrantedAuthority> grantedAuthorities = (List)redisTemplate.opsForHash().get(KeyMap.REDIS_AUTH, phone);
-                        authentication = new UsernamePasswordAuthenticationToken(phone, null, grantedAuthorities);
-                    }else {
+                    if (redisTemplate.hasKey(KeyMap.REDIS_AUTH) && redisTemplate.opsForHash().hasKey(KeyMap.REDIS_AUTH, phone)) {
+                        List<GrantedAuthority> grantedAuthorities = (List) redisTemplate.opsForHash().get(KeyMap.REDIS_AUTH, phone);
+                        UserDetails userDetails = new User(phone, "", grantedAuthorities);
+                        authentication = new UsernamePasswordAuthenticationToken(userDetails, null, grantedAuthorities);
+                    } else {
                         UserDetails userDetails = userDetailsService.loadUserByUsername(phone);
-                        authentication = new UsernamePasswordAuthenticationToken(phone, null, userDetails.getAuthorities());
+                        authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     }
                     SecurityContextHolder.getContext().setAuthentication(authentication);  // 在上下文中记录UserDetails
                     if (isAlmostExpired(token)) {
                         new JwtRefreshSuccessHandler().onAuthenticationSuccess(request, response, authentication);
                     }
+                } else {
+                    new JwtFailureHandler().onAuthenticationFailure(request, response, null);
+                    return;
                 }
+            } else {
+                new JwtFailureHandler().onAuthenticationFailure(request, response, null);
+                return;
             }
         } catch (Exception e) {
             e.printStackTrace();
